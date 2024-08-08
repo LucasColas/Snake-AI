@@ -1,128 +1,114 @@
-import tkinter as tk
 import random
 import numpy as np
+import tkinter as tk
 
 class SnakeGame:
-    def __init__(self, width=400, height=400, cell_size=20, gui=True):
-        self.width = width
-        self.height = height
+    def __init__(self, grid_size=20, cell_size=20, gui=False):
+        self.grid_size = grid_size
         self.cell_size = cell_size
         self.gui = gui
-        
+
         if self.gui:
-            self.root = tk.Tk()
-            self.root.title("Snake Game")
-            self.root.resizable(False, False)
-            
-            self.canvas = tk.Canvas(self.root, width=self.width, height=self.height, bg="white")
+            self.window = tk.Tk()
+            self.window.title("Snake Game")
+            self.window.resizable(False, False)
+            self.canvas = tk.Canvas(self.window, bg="white", height=grid_size*cell_size, width=grid_size*cell_size)
             self.canvas.pack()
-            
-            self.replay_button = tk.Button(self.root, text="Replay", command=self.start_game)
-            self.replay_button.pack()
+            self.window.bind("<KeyPress>", self.on_key_press)
         
-        self.start_game()
-        
-        if self.gui:
-            self.root.bind_all("<KeyPress>", self.on_key_press)
-            self.root.mainloop()
+        self.reset()
 
-    def start_game(self):
-        self.snake = [(self.cell_size, self.cell_size), 
-                      (self.cell_size, 2*self.cell_size), 
-                      (self.cell_size, 3*self.cell_size)]
-        self.snake_direction = "Down"
-        
-        self.apple_position = self.set_new_apple_position()
-        
-        if self.gui:
-            self.canvas.delete("all")
-            self.apple = self.canvas.create_rectangle(*self.apple_position, 
-                                                      self.apple_position[0]+self.cell_size, 
-                                                      self.apple_position[1]+self.cell_size, 
-                                                      fill="red")
-        self.is_game_over = False
+    def reset(self):
+        self.snake = [(5, 5), (5, 4), (5, 3)]
+        self.snake_direction = (0, 1)
+        self.food = self.place_food()
+        self.done = False
         self.score = 0
-        
-        if self.gui:
-            self.update_snake()
-            self.root.after(100, self.move_snake)
-    
-    def set_new_apple_position(self):
+        return self.get_state()
+
+    def place_food(self):
         while True:
-            x = random.randint(0, (self.width // self.cell_size) - 1) * self.cell_size
-            y = random.randint(0, (self.height // self.cell_size) - 1) * self.cell_size
-            if (x, y) not in self.snake:
-                return x, y
+            food = (random.randint(0, self.grid_size-1), random.randint(0, self.grid_size-1))
+            if food not in self.snake:
+                return food
 
-    def on_key_press(self, e):
-        new_direction = e.keysym
-        all_directions = {"Up", "Down", "Left", "Right"}
-        opposites = [{"Up", "Down"}, {"Left", "Right"}]
+    def step(self, action):
+        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # Up, Down, Left, Right
+        self.snake_direction = directions[action]
+        head_x, head_y = self.snake[0]
+        move_x, move_y = self.snake_direction
+        new_head = (head_x + move_x, head_y + move_y)
+        self.snake = [new_head] + self.snake[:-1]
 
-        if (new_direction in all_directions and
-                {new_direction, self.snake_direction} not in opposites):
-            self.snake_direction = new_direction
-
-    def move_snake(self):
-        if self.is_game_over:
-            return
-        
-        head_x, head_y = self.snake[-1]
-        
-        if self.snake_direction == "Up":
-            new_head = (head_x, head_y - self.cell_size)
-        elif self.snake_direction == "Down":
-            new_head = (head_x, head_y + self.cell_size)
-        elif self.snake_direction == "Left":
-            new_head = (head_x - self.cell_size, head_y)
-        elif self.snake_direction == "Right":
-            new_head = (head_x + self.cell_size, head_y)
-        
-        self.snake.append(new_head)
-        
-        if new_head == self.apple_position:
-            self.apple_position = self.set_new_apple_position()
-            if self.gui:
-                self.canvas.coords(self.apple, *self.apple_position, 
-                                   self.apple_position[0]+self.cell_size, 
-                                   self.apple_position[1]+self.cell_size)
+        if new_head == self.food:
+            self.snake.append(self.snake[-1])
+            self.food = self.place_food()
             self.score += 1
+            reward = 250
         else:
-            self.snake.pop(0)
-        
-        if (new_head[0] < 0 or new_head[0] >= self.width or
-                new_head[1] < 0 or new_head[1] >= self.height or
-                len(self.snake) != len(set(self.snake))):
-            self.is_game_over = True
-            if self.gui:
-                self.canvas.create_text(self.width // 2, self.height // 2, text="GAME OVER", fill="red", font=("Arial", 24))
-        else:
-            if self.gui:
-                self.update_snake()
-                self.root.after(100, self.move_snake)
-        
-    def update_snake(self):
-        if self.gui:
-            self.canvas.delete("snake")
-            for x, y in self.snake:
-                self.canvas.create_rectangle(x, y, x+self.cell_size, y+self.cell_size, fill="green", tag="snake")
+            reward = -0.1
+            # calculate the distance between the snake head and the food
+            head_x, head_y = new_head
+            food_x, food_y = self.food
+            distance = abs(head_x - food_x) + abs(head_y - food_y)
+            reward = reward - 0.1*distance
+
+        if self.is_collision(new_head):
+            self.done = True
+            reward = -100
+
+        return self.get_state(), reward, self.done
+
+    def is_collision(self, position):
+        x, y = position
+        if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size:
+            return True
+        if position in self.snake[1:]:
+            return True
+        return False
 
     def get_state(self):
-        state = np.zeros((self.width // self.cell_size, self.height // self.cell_size))
-        for (x, y) in self.snake:
-            state[x // self.cell_size, y // self.cell_size] = 1
-        ax, ay = self.apple_position
-        state[ax // self.cell_size, ay // self.cell_size] = -1
-        return state.flatten()
+        head_x, head_y = self.snake[0]
+        food_x, food_y = self.food
+        return np.array([
+            head_x, head_y,
+            food_x, food_y,
+            self.snake_direction[0], self.snake_direction[1],
+            (head_x - food_x) / self.grid_size,
+            (head_y - food_y) / self.grid_size
+        ])
+
+    def on_key_press(self, e):
+        directions = {"Up": 0, "Down": 1, "Left": 2, "Right": 3}
+        if e.keysym in directions:
+            self.snake_direction = directions[e.keysym]
+
+    def update_canvas(self):
+        self.canvas.delete(tk.ALL)
+        for x, y in self.snake:
+            self.canvas.create_rectangle(x*self.cell_size, y*self.cell_size,
+                                         (x+1)*self.cell_size, (y+1)*self.cell_size, fill="green")
+        food_x, food_y = self.food
+        self.canvas.create_rectangle(food_x*self.cell_size, food_y*self.cell_size,
+                                     (food_x+1)*self.cell_size, (food_y+1)*self.cell_size, fill="red")
+
+    def game_loop(self, agent):
+        if not self.done:
+            state = self.get_state()
+            action = agent.act(state)
+            next_state, reward, done = self.step(action)
+            agent.remember(state, action, reward, next_state, done)
+            self.update_canvas()
+            if done:
+                self.reset()
+            self.window.after(100, self.game_loop, agent)
     
-    def step(self, action):
-        directions = ["Up", "Down", "Left", "Right"]
-        self.snake_direction = directions[action]
-        self.move_snake()
-        next_state = self.get_state()
-        reward = 1 if self.snake[-1] == self.apple_position else -0.1
-        done = self.is_game_over
-        return next_state, reward, done, self.score
+    def run_with_gui(self, agent):
+        self.update_canvas()
+        self.window.after(100, self.game_loop, agent)
+        self.window.mainloop()
+
 
 if __name__ == "__main__":
     game = SnakeGame(gui=True)
+    game.run_with_gui(None)

@@ -1,9 +1,18 @@
+import optuna
+from src.find_hyperparameters import objective, train_agent
+from src.DQN import Agent
 from src.snake import SnakeGame
-from src.DQN import train_snake, test_snake
 
 def main():
-    trained_dqn = train_snake(num_episodes=1000000)
-    test_snake(trained_dqn)
+    """study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=100)
+
+    print("Best hyperparameters: ", study.best_params)"""
+    agent = Agent(state_dim=8, action_dim=4, hidden_layer_dim=256, gamma=0.95, epsilon=0.78, epsilon_decay=0.999, lr=0.0006)
+    train_agent(agent, episodes=10000)
+    agent.save()
+    game = SnakeGame(gui=True)
+    game.run_with_gui(agent)
 
 if __name__ == "__main__":
     main()

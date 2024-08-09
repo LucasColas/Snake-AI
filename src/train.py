@@ -2,7 +2,7 @@ import optuna
 from src.snake import SnakeGame
 from src.DQN import Agent
 
-def train_agent(agent, episodes=10000, batch_size=64):
+def train_agent(agent, episodes=10000, n_steps=2000, batch_size=64):
     total_reward = 0
     print("...training agent...")
     for e in range(episodes):
@@ -10,7 +10,7 @@ def train_agent(agent, episodes=10000, batch_size=64):
         episode_reward = 0
         game = SnakeGame(gui=False)
         state = game.reset()
-        for time in range(5000):
+        for time in range(n_steps):
             action = agent.act(state)
             #print(" action : ", action, " state : ", state, " time : ", time, " episode : ", e)
             next_state, reward, done = game.step(action)

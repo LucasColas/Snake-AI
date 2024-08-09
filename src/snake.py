@@ -44,28 +44,29 @@ class SnakeGame:
             self.snake.append(self.snake[-1])
             self.food = self.place_food()
             self.score += 1
-            reward = 250
+            reward = 250 * self.score
         else:
-            reward = -0.1
+            reward = -1
             # calculate the distance between the snake head and the food
             head_x, head_y = new_head
             food_x, food_y = self.food
             distance = abs(head_x - food_x) + abs(head_y - food_y)
             reward = reward - 0.1*distance
 
-        if self.is_collision(new_head):
+        collision, reward = self.is_collision(new_head)
+        if collision:
             self.done = True
-            reward = -100
+            reward = reward
 
         return self.get_state(), reward, self.done
 
     def is_collision(self, position):
         x, y = position
         if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size:
-            return True
+            return True, -100
         if position in self.snake[1:]:
-            return True
-        return False
+            return True, -500
+        return False, 0
 
     def get_state(self):
         head_x, head_y = self.snake[0]

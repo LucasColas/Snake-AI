@@ -44,29 +44,25 @@ class SnakeGame:
             self.snake.append(self.snake[-1])
             self.food = self.place_food()
             self.score += 1
-            reward = 250 * self.score
+            reward = 10
         else:
-            reward = -1
-            # calculate the distance between the snake head and the food
-            head_x, head_y = new_head
-            food_x, food_y = self.food
-            distance = abs(head_x - food_x) + abs(head_y - food_y)
-            reward = reward - 0.1*distance
-
-        collision, reward = self.is_collision(new_head)
-        if collision:
+            reward = 0
+        
+        if self.is_collision(new_head):
             self.done = True
-            reward = reward
+            reward = -10
 
-        return self.get_state(), reward, self.done
+        return self.get_state(), reward, self.done, self.score
 
     def is_collision(self, position):
         x, y = position
         if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size:
-            return True, -100
+            #print("collision with wall")
+            return True
         if position in self.snake[1:]:
-            return True, -500
-        return False, 0
+            #print("collision with itself")
+            return True
+        return False
 
     def get_state(self):
         head_x, head_y = self.snake[0]
@@ -97,7 +93,8 @@ class SnakeGame:
         if not self.done:
             state = self.get_state()
             action = agent.act(state)
-            next_state, reward, done = self.step(action)
+            
+            next_state, reward, done, _ = self.step(action)
             agent.remember(state, action, reward, next_state, done)
             self.update_canvas()
             if done:

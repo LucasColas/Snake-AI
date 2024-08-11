@@ -11,19 +11,15 @@ class DQN(nn.Module):
     def __init__(self, input_dim, hidden_layer_dim, output_dim):
         super(DQN, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_layer_dim)
-        self.fc2 = nn.Linear(hidden_layer_dim, hidden_layer_dim)
-        self.fc3 = nn.Linear(hidden_layer_dim, hidden_layer_dim)
-        self.fc4 = nn.Linear(hidden_layer_dim, output_dim)
+        self.fc2 = nn.Linear(hidden_layer_dim, output_dim)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        x = self.fc4(x)
+        x = self.fc2(x)
         return x
 
 class Agent:
-    def __init__(self, state_dim, action_dim, hidden_layer_dim, gamma=0.99, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.995, lr=0.001):
+    def __init__(self, state_dim, action_dim, hidden_layer_dim, gamma=0.9, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.995, lr=0.001, maxlen=100000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -31,7 +27,7 @@ class Agent:
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
         self.lr = lr
-        self.memory = deque(maxlen=2000)
+        self.memory = deque(maxlen=maxlen)
         self.model = DQN(state_dim, hidden_layer_dim, action_dim).cuda()
         self.target_model = DQN(state_dim, hidden_layer_dim, action_dim).cuda()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)

@@ -9,10 +9,11 @@ def main():
 
     print("Best hyperparameters: ", study.best_params)"""
     agent = Agent(state_dim=8, action_dim=4, hidden_layer_dim=256)
-    train_agent(agent, episodes=1000)
+    #train_agent(agent, episodes=1000)
     #agent.save()
 
-    agent.load("snake_dqn.pth")
+    agent.load("snake_dqn_2.pth")
+    train_agent(agent, episodes=1200)
     game = SnakeGame(gui=True)
     game.run_with_gui(agent)
 

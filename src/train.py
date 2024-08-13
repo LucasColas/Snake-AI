@@ -35,6 +35,7 @@ def train_agent(agent, episodes=100, n_steps=2000, batch_size=1000):
         if e and e % 100 == 0:
             print("episode : ", e, " mean episode_reward : ", total_reward / e)
             print("best score : ", best_score)
+            agent.save(f'snake_dqn_{best_score}_episode_{e}.pth')
 
     print("mean episode_reward : ", total_reward / episodes)
     plot_scores(plot_scores, plot_rewards)

@@ -38,6 +38,7 @@ def plot(scores, mean_scores):
 
 class SnakeGameAI:
     def __init__(self):
+        
         # snake at the center
         self.snake = [(GRID_SIZE // 2, GRID_SIZE // 2), (GRID_SIZE // 2 - 1, GRID_SIZE // 2), (GRID_SIZE // 2 - 2, GRID_SIZE // 2)]
         self.direction = (1, 0)
@@ -68,19 +69,22 @@ class SnakeGameAI:
         dir_d = self.direction == (0, 1)
 
         state = [
-            # Danger straight
+            # Danger straight. Check if moving straight ahead in 
+            # the current direction would result in a collision
             (dir_r and self._is_collision((head_x + 1, head_y))) or
             (dir_l and self._is_collision((head_x - 1, head_y))) or
             (dir_u and self._is_collision((head_x, head_y - 1))) or
             (dir_d and self._is_collision((head_x, head_y + 1))),
 
-            # Danger right
+            # Danger right. Check if turning right from 
+            # the current direction would result in a collision.
             (dir_u and self._is_collision((head_x + 1, head_y))) or
             (dir_d and self._is_collision((head_x - 1, head_y))) or
             (dir_l and self._is_collision((head_x, head_y - 1))) or
             (dir_r and self._is_collision((head_x, head_y + 1))),
 
-            # Danger left
+            # Danger left. Check if turning left from 
+            # the current direction would result in a collision
             (dir_d and self._is_collision((head_x + 1, head_y))) or
             (dir_u and self._is_collision((head_x - 1, head_y))) or
             (dir_r and self._is_collision((head_x, head_y - 1))) or
@@ -89,7 +93,8 @@ class SnakeGameAI:
             # Move direction
             dir_l, dir_r, dir_u, dir_d,
 
-            # Apple location
+            # Apple location. Indicate whether the apple is 
+            # to the left, right, above, or below the snake's head.
             self.apple[0] < head_x,  # apple left
             self.apple[0] > head_x,  # apple right
             self.apple[1] < head_y,  # apple up
@@ -196,7 +201,6 @@ def train():
     run = True
     while run:
 
-
         # get old state
         state_old = agent.get_state(game)
 
@@ -214,6 +218,7 @@ def train():
         agent.remember(state_old, final_move, reward, state_new, done)
         game.draw(agent.n_games, record)
         clock.tick(SPEED)
+
         if done:
 
             # train long memory, plot result

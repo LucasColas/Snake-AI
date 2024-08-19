@@ -20,7 +20,7 @@ class LinearQNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(LinearQNet, self).__init__()
         self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, output_size)
+        self.linear2 = nn.Linear(hidden_size, output_size) # Output is Q value for each action. The output size is 3
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
@@ -66,11 +66,10 @@ class QTrainer:
 
         target = pred.clone()
         for idx in range(len(done)):
-            Q_new = reward[idx]
-            if not done[idx]:
+            Q_new = reward[idx] # If done
+            if not done[idx]: # If not done
                 Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
-
-            target[idx][torch.argmax(action[idx]).item()] = Q_new
+            target[idx][torch.argmax(action[idx]).item()] = Q_new # Update the Q value for the action taken
 
         # Gradient descent
         self.optimizer.zero_grad()

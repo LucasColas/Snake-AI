@@ -38,7 +38,8 @@ def plot(scores, mean_scores):
 
 class SnakeGameAI:
     def __init__(self):
-        self.snake = [(5, 5), (4, 5), (3, 5)]
+        # snake at the center
+        self.snake = [(GRID_SIZE // 2, GRID_SIZE // 2), (GRID_SIZE // 2 - 1, GRID_SIZE // 2), (GRID_SIZE // 2 - 2, GRID_SIZE // 2)]
         self.direction = (1, 0)
         self.apple = self._place_apple()
         self.score = 0
@@ -52,7 +53,7 @@ class SnakeGameAI:
                 return position
 
     def reset(self):
-        self.snake = [(5, 5), (4, 5), (3, 5)]
+        self.snake = [(GRID_SIZE // 2, GRID_SIZE // 2), (GRID_SIZE // 2 - 1, GRID_SIZE // 2), (GRID_SIZE // 2 - 2, GRID_SIZE // 2)] 
         self.direction = (1, 0)
         self.apple = self._place_apple()
         self.score = 0
@@ -159,7 +160,7 @@ class SnakeGameAI:
 
         return reward, done, self.score
 
-    def draw(self):
+    def draw(self, n_games, record):
         screen.fill(BACKGROUND_COLOR)
         pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), CELL_SIZE)
 
@@ -176,6 +177,10 @@ class SnakeGameAI:
         text = font.render(f"Score: {self.score}", True, SCORE_COLOR)
         screen.blit(text, (10, 10))
 
+        # Display the number of games and the record
+        text = font.render(f"Games: {n_games} Record: {record}", True, SCORE_COLOR)
+        screen.blit(text, (10, 50))
+
         pygame.display.flip()
 
 
@@ -191,7 +196,6 @@ def train():
     run = True
     while run:
 
-        
 
         # get old state
         state_old = agent.get_state(game)
@@ -208,9 +212,10 @@ def train():
 
         # remember
         agent.remember(state_old, final_move, reward, state_new, done)
-        game.draw()
+        game.draw(agent.n_games, record)
         clock.tick(SPEED)
         if done:
+
             # train long memory, plot result
             game.reset()
             agent.n_games += 1

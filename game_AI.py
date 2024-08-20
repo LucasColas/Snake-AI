@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from src.agent import Agent
+
 # Initialize Pygame
 pygame.init()
 
@@ -12,21 +13,22 @@ SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 750
 CELL_SIZE = 25
 GRID_SIZE = SCREEN_WIDTH // CELL_SIZE
-SPEED = 60
+SPEED = 120
 
 # clock
 clock = pygame.time.Clock()
 
 # Colors
+RED = (255, 0, 0)
 SNAKE_COLOR = (248, 168, 0)
 BACKGROUND_COLOR = (104, 56, 0)
 APPLE_COLOR = (1, 252, 128)
-BORDER_COLOR = (232, 168, 0)
+BORDER_COLOR =  RED # before : (232, 168, 0)
 SCORE_COLOR = (248, 252, 248)
 
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Snake")
+pygame.display.set_caption("Snake with AI")
 
 font = pygame.font.Font(None, 36)
 def plot(scores, mean_scores):
@@ -46,6 +48,7 @@ class SnakeGameAI:
         self.score = 0
         self.grow = False
         self.frame_iteration = 0
+        self.clock_wise = [(-1, 0), (0, -1), (1, 0), (0, 1)]  # left, up, right, down
 
     def _place_apple(self):
         while True:
@@ -71,24 +74,24 @@ class SnakeGameAI:
         state = [
             # Danger straight. Check if moving straight ahead in 
             # the current direction would result in a collision
-            (dir_r and self._is_collision((head_x + 1, head_y))) or
-            (dir_l and self._is_collision((head_x - 1, head_y))) or
-            (dir_u and self._is_collision((head_x, head_y - 1))) or
-            (dir_d and self._is_collision((head_x, head_y + 1))),
+            (dir_r and self._is_collision((head_x + 1, head_y))[0]) or
+            (dir_l and self._is_collision((head_x - 1, head_y))[0]) or
+            (dir_u and self._is_collision((head_x, head_y - 1))[0]) or
+            (dir_d and self._is_collision((head_x, head_y + 1))[0]),
 
             # Danger right. Check if turning right from 
             # the current direction would result in a collision.
-            (dir_u and self._is_collision((head_x + 1, head_y))) or
-            (dir_d and self._is_collision((head_x - 1, head_y))) or
-            (dir_l and self._is_collision((head_x, head_y - 1))) or
-            (dir_r and self._is_collision((head_x, head_y + 1))),
+            (dir_u and self._is_collision((head_x + 1, head_y))[0]) or
+            (dir_d and self._is_collision((head_x - 1, head_y))[0]) or
+            (dir_l and self._is_collision((head_x, head_y - 1))[0]) or
+            (dir_r and self._is_collision((head_x, head_y + 1))[0]),
 
             # Danger left. Check if turning left from 
             # the current direction would result in a collision
-            (dir_d and self._is_collision((head_x + 1, head_y))) or
-            (dir_u and self._is_collision((head_x - 1, head_y))) or
-            (dir_r and self._is_collision((head_x, head_y - 1))) or
-            (dir_l and self._is_collision((head_x, head_y + 1))),
+            (dir_d and self._is_collision((head_x + 1, head_y))[0]) or
+            (dir_u and self._is_collision((head_x - 1, head_y))[0]) or
+            (dir_r and self._is_collision((head_x, head_y - 1))[0]) or
+            (dir_l and self._is_collision((head_x, head_y + 1))[0]),
 
             # Move direction
             dir_l, dir_r, dir_u, dir_d,
@@ -109,13 +112,15 @@ class SnakeGameAI:
 
         # Check if snake collides with borders
         if not (1 <= position[0] < GRID_SIZE - 1 and 1 <= position[1] < GRID_SIZE - 1):
-            return True
+            #print('Border collision')
+            return True, -1000
 
         # Check if snake collides with itself
         if position in self.snake[1:]:
-            return True
+            #print('Self collision')
+            return True, -1000
 
-        return False
+        return False, 0
 
     def play_step(self, action, plot_scores, plot_mean_scores):
         for event in pygame.event.get():
@@ -124,18 +129,18 @@ class SnakeGameAI:
                 plot(plot_scores, plot_mean_scores)
                 sys.exit()
         self.frame_iteration += 1
-        # Perform the action
-        clock_wise = [(-1, 0), (0, -1), (1, 0), (0, 1)]  # left, up, right, down
-        idx = clock_wise.index(self.direction)
+        
+        idx = self.clock_wise.index(self.direction)
 
         if np.array_equal(action, [1, 0, 0]):
-            new_dir = clock_wise[idx]  # No change
+            new_dir = self.clock_wise[idx]  # No change
         elif np.array_equal(action, [0, 1, 0]):
             new_idx = (idx + 1) % 4  # Right turn r -> d -> l -> u
-            new_dir = clock_wise[new_idx]
+            new_dir = self.clock_wise[new_idx]
+
         else:  # [0, 0, 1]
             new_idx = (idx - 1) % 4  # Left turn l -> u -> r -> d
-            new_dir = clock_wise[new_idx]
+            new_dir = self.clock_wise[new_idx]
 
         self.direction = new_dir
 
@@ -150,17 +155,22 @@ class SnakeGameAI:
         done = False
 
         # Check if the snake hits the wall or itself
-        if self._is_collision(new_head) or self.frame_iteration > 100*len(self.snake):
-            reward = -10
+        collision, reward = self._is_collision()
+
+        if collision or self.frame_iteration > 100*len(self.snake): 
+            if self.frame_iteration > 100*len(self.snake):
+                reward = -1000
+                print('Time out')  
             done = True
             return reward, done, self.score
 
         # Check if the snake eats the apple
         if new_head == self.apple:
             self.score += 1
-            reward = 10
+            reward = 1000
             self.apple = self._place_apple()
         else:
+            reward = 0
             self.snake.pop()
 
         return reward, done, self.score
@@ -220,7 +230,6 @@ def train():
         clock.tick(SPEED)
 
         if done:
-
             # train long memory, plot result
             game.reset()
             agent.n_games += 1

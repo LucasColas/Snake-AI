@@ -13,7 +13,7 @@ SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 750
 CELL_SIZE = 25
 GRID_SIZE = SCREEN_WIDTH // CELL_SIZE
-SPEED = 120
+SPEED = 500
 
 # clock
 clock = pygame.time.Clock()
@@ -128,6 +128,18 @@ class SnakeGameAI:
                 pygame.quit()
                 plot(plot_scores, plot_mean_scores)
                 sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                global SPEED
+
+                if event.key == pygame.K_m:
+                    SPEED += 20
+                    
+                if event.key == pygame.K_l:
+                    SPEED -= 20
+                    print('Speed:', SPEED)
+
+                
         self.frame_iteration += 1
         
         idx = self.clock_wise.index(self.direction)
@@ -228,7 +240,7 @@ def train():
         agent.remember(state_old, final_move, reward, state_new, done)
         game.draw(agent.n_games, record)
         clock.tick(SPEED)
-
+       
         if done:
             # train long memory, plot result
             game.reset()

@@ -31,6 +31,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Snake with AI")
 
 font = pygame.font.Font(None, 36)
+
 def plot(scores, mean_scores):
     
     plt.plot(scores, label='Score')
@@ -218,7 +219,7 @@ def train():
     record = 0
     agent = Agent()
     # load model
-    #agent.model.load()
+    #agent.model.load("model/model.pth")
     game = SnakeGameAI()
     run = True
     while run:

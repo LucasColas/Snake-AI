@@ -10,6 +10,7 @@ Deep Q learning that learns to play Snake !
 Using a virtual environment is recommended. 
 
 ## How to play
+
 * git clone this repository
   ```bash
   git clone git@github.com:LucasColas/Maze-Solver.git
@@ -20,17 +21,20 @@ Using a virtual environment is recommended.
   ```
 
 Install the dependencies
-```bash
+
+```
+bash
 pip install requirements.txt
 ```
 
-* run `game_AI.py`. The game with the AI learning snake will be displayed.. The best model will be saved. 
+* run `game_AI.py`. The game with the AI learning snake will be displayed.. The best model will be saved.
 * Enjoy !
 
 ## More explanation
-game_AI.py is the entry point. The folder called src contains the code of the project. `agent.py` contains the code related to the deep q learning algorithm. You can tweak the hyperparameters in this file. 
-If you run `game_AI.py` it will train the AI. It launches a pygame window with the AI playing the snake. in `game_AI.py` there's function called train. You can change (uncomment) the code to load an existing model if you want. If you have no model, a model will be saved by the code. Every time the AI beats the record the model is saved. 
-I used Deep Q Learning. There's not a predined number of episodes. You close the game whenever you want. 
+
+game_AI.py is the entry point. The folder called src contains the code of the project. `agent.py` contains the code related to the deep q learning algorithm. You can tweak the hyperparameters in this file.
+If you run `game_AI.py` it will train the AI. It launches a pygame window with the AI playing the snake. in `game_AI.py` there's function called train. You can change (uncomment) the code to load an existing model if you want. If you have no model, a model will be saved by the code. Every time the AI beats the record the model is saved.
+I used Deep Q Learning. There's not a predined number of episodes. You close the game whenever you want.
 
 The neural network is a multi layer perceptron with one hidden layer. 
 

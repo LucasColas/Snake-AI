@@ -4,7 +4,14 @@ Deep Q learning that learns to play Snake !
 
 <img src="https://github.com/LucasColas/Snake-AI/blob/main/img/sneak%20peak.jpg" width=30% height=30%>
 
-## Prerequisites 
+Results of the score of Deep Q Learning through episodes
+<img src="https://github.com/LucasColas/Snake-AI/blob/main/img/Premier%20res.png" width=30% height=30%>
+x-axis : episodes
+y-axis : score 
+
+An episode is ended when the snake collides with itself or a wall.
+
+## Run the code - Prerequisites 
 * [Python >= 3.10](https://www.python.org/)
 
 Using a virtual environment is recommended. 
